@@ -46,6 +46,7 @@ function App() {
   const [isNewAccount, setIsNewAccount] = useState(false)
   const [activeTab, setActiveTab] = useState('dashboard')
   const [confirmModal, setConfirmModal] = useState({ show: false, type: '', share: '', price: 0, quantity: 0 })
+  const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
     return onAuthStateChanged(auth, currentUser => {
@@ -229,6 +230,7 @@ function App() {
   }
 
   const confirmBuyTransaction = async () => {
+    setIsProcessing(true)
     try {
       await addDoc(collection(db, 'users', user.uid, 'transactions'), {
         type: 'buy',
@@ -241,10 +243,15 @@ function App() {
       })
       setBuyForm({ ...emptyBuyForm, date: new Date().toISOString().slice(0, 10) })
       setError('')
-      setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })
-      showNotification(`Buy trade confirmed: ${confirmModal.share} @ ₹${confirmModal.price} × ${confirmModal.quantity}`)
+      // Close modal after a brief delay for better UX
+      setTimeout(() => {
+        setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })
+        setIsProcessing(false)
+      }, 500)
+      showNotification(`✅ Buy trade confirmed: ${confirmModal.share} @ ₹${confirmModal.price} × ${confirmModal.quantity}`)
     } catch (err) {
       setError(err.message)
+      setIsProcessing(false)
     }
   }
 
@@ -274,6 +281,7 @@ function App() {
 
   const confirmSellTransaction = async () => {
     const holding = holdings[sellForm.share]
+    setIsProcessing(true)
     try {
       await addDoc(collection(db, 'users', user.uid, 'transactions'), {
         type: 'sell',
@@ -287,11 +295,16 @@ function App() {
       })
       setSellForm({ ...emptySellForm, date: new Date().toISOString().slice(0, 10) })
       setError('')
-      setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })
+      // Close modal after a brief delay for better UX
+      setTimeout(() => {
+        setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })
+        setIsProcessing(false)
+      }, 500)
       const pnl = (confirmModal.price - holding.avgPrice) * confirmModal.quantity
-      showNotification(`Sell trade confirmed: ${confirmModal.share} @ ₹${confirmModal.price} | P/L: ₹${pnl.toFixed(2)}`)
+      showNotification(`✅ Sell trade confirmed: ${confirmModal.share} @ ₹${confirmModal.price} | P/L: ₹${pnl.toFixed(2)}`)
     } catch (err) {
       setError(err.message)
+      setIsProcessing(false)
     }
   }
 
@@ -483,7 +496,7 @@ function App() {
                   <input type="number" placeholder="Buying price" value={buyForm.buyPrice} onChange={e => setBuyForm({...buyForm, buyPrice: e.target.value})} step="0.01" required />
                   <input type="number" placeholder="Quantity" value={buyForm.buyQuantity} onChange={e => setBuyForm({...buyForm, buyQuantity: e.target.value})} step="1" required />
                   <textarea placeholder="Notes (optional)" value={buyForm.note} onChange={e => setBuyForm({...buyForm, note: e.target.value})} />
-                  <button type="submit" className="btn-primary">Record Buy</button>
+                  <button type="submit" className="btn-primary">OKAY</button>
                 </form>
                 <form onSubmit={handleSell} className="form-grid">
                   <h3>Sell</h3>
@@ -492,7 +505,7 @@ function App() {
                   <input type="number" placeholder="Selling price" value={sellForm.sellPrice} onChange={e => setSellForm({...sellForm, sellPrice: e.target.value})} step="0.01" required />
                   <input type="number" placeholder="Quantity to sell" value={sellForm.sellQuantity} onChange={e => setSellForm({...sellForm, sellQuantity: e.target.value})} step="1" required />
                   <textarea placeholder="Notes (optional)" value={sellForm.note} onChange={e => setSellForm({...sellForm, note: e.target.value})} />
-                  <button type="submit" className="btn-primary">Record Sell</button>
+                  <button type="submit" className="btn-primary">OKAY</button>
                 </form>
               </div>
               <datalist id="stock-list">
@@ -576,8 +589,8 @@ function App() {
             </div>
             <div className="modal-buttons">
               <button className="btn-cancel" onClick={() => setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })}>Cancel</button>
-              <button className="btn-confirm" onClick={confirmModal.type === 'buy' ? confirmBuyTransaction : confirmSellTransaction}>
-                Confirm {confirmModal.type === 'buy' ? 'Buy' : 'Sell'}
+              <button className="btn-confirm" onClick={confirmModal.type === 'buy' ? confirmBuyTransaction : confirmSellTransaction} disabled={isProcessing}>
+                {isProcessing ? 'Processing...' : `Confirm ${confirmModal.type === 'buy' ? 'Purchase' : 'Sale'}`}
               </button>
             </div>
           </div>
