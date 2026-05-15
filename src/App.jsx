@@ -47,6 +47,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [confirmModal, setConfirmModal] = useState({ show: false, type: '', share: '', price: 0, quantity: 0 })
   const [isProcessing, setIsProcessing] = useState(false)
+  const [confirmStatus, setConfirmStatus] = useState('idle')
 
   useEffect(() => {
     return onAuthStateChanged(auth, currentUser => {
@@ -231,6 +232,7 @@ function App() {
 
   const confirmBuyTransaction = async () => {
     setIsProcessing(true)
+    setConfirmStatus('processing')
     try {
       await addDoc(collection(db, 'users', user.uid, 'transactions'), {
         type: 'buy',
@@ -243,10 +245,11 @@ function App() {
       })
       setBuyForm({ ...emptyBuyForm, date: new Date().toISOString().slice(0, 10) })
       setError('')
-      setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })
+      setConfirmStatus('success')
       showNotification(`✅ Buy trade confirmed: ${confirmModal.share} @ ₹${confirmModal.price} × ${confirmModal.quantity}`)
     } catch (err) {
       setError(err.message)
+      setConfirmStatus('error')
     } finally {
       setIsProcessing(false)
     }
@@ -279,6 +282,7 @@ function App() {
   const confirmSellTransaction = async () => {
     const holding = holdings[sellForm.share]
     setIsProcessing(true)
+    setConfirmStatus('processing')
     try {
       await addDoc(collection(db, 'users', user.uid, 'transactions'), {
         type: 'sell',
@@ -292,11 +296,12 @@ function App() {
       })
       setSellForm({ ...emptySellForm, date: new Date().toISOString().slice(0, 10) })
       setError('')
-      setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })
+      setConfirmStatus('success')
       const pnl = (confirmModal.price - holding.avgPrice) * confirmModal.quantity
       showNotification(`✅ Sell trade confirmed: ${confirmModal.share} @ ₹${confirmModal.price} | P/L: ₹${pnl.toFixed(2)}`)
     } catch (err) {
       setError(err.message)
+      setConfirmStatus('error')
     } finally {
       setIsProcessing(false)
     }
@@ -581,11 +586,31 @@ function App() {
               <p><strong>Quantity:</strong> {confirmModal.quantity}</p>
               <p className="modal-total"><strong>Total Amount:</strong> ₹{(confirmModal.price * confirmModal.quantity).toFixed(2)}</p>
             </div>
+            {confirmStatus === 'error' && (
+              <div className="modal-error">Could not submit the trade. Please try again.</div>
+            )}
             <div className="modal-buttons">
-              <button type="button" className="btn-cancel" onClick={() => setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })}>Cancel</button>
-              <button type="button" className="btn-confirm" onClick={confirmModal.type === 'buy' ? confirmBuyTransaction : confirmSellTransaction} disabled={isProcessing}>
-                {isProcessing ? 'Processing...' : `Submit Trade`}
-              </button>
+              {confirmStatus === 'success' ? (
+                <>
+                  <div className="modal-success">✅ Trade submitted successfully</div>
+                  <button type="button" className="btn-confirm" onClick={() => {
+                    setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })
+                    setConfirmStatus('idle')
+                  }}>
+                    Done
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button type="button" className="btn-cancel" onClick={() => {
+                    setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })
+                    setConfirmStatus('idle')
+                  }}>Cancel</button>
+                  <button type="button" className="btn-confirm" onClick={confirmModal.type === 'buy' ? confirmBuyTransaction : confirmSellTransaction} disabled={isProcessing}>
+                    {isProcessing ? 'Processing...' : `Submit Trade`}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

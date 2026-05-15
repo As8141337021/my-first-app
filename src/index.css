@@ -678,6 +678,28 @@ footer {
   align-items: center;
 }
 
+.modal-error {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  background: rgba(248, 113, 113, 0.16);
+  color: #fecaca;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: 10px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.modal-success {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  background: rgba(34, 197, 94, 0.16);
+  color: #bbf7d0;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-radius: 10px;
+  text-align: center;
+  font-weight: 600;
+}
+
 .modal-details strong {
   color: #93c5fd;
   font-weight: 700;
