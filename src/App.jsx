@@ -221,6 +221,7 @@ function App() {
       setError('Please fill all required fields')
       return
     }
+    setConfirmStatus('idle')
     setConfirmModal({
       show: true,
       type: 'buy',
@@ -247,6 +248,10 @@ function App() {
       setError('')
       setConfirmStatus('success')
       showNotification(`✅ Buy trade confirmed: ${confirmModal.share} @ ₹${confirmModal.price} × ${confirmModal.quantity}`)
+      setTimeout(() => {
+        setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })
+        setConfirmStatus('idle')
+      }, 1200)
     } catch (err) {
       setError(err.message)
       setConfirmStatus('error')
@@ -270,6 +275,7 @@ function App() {
       return
     }
 
+    setConfirmStatus('idle')
     setConfirmModal({
       show: true,
       type: 'sell',
@@ -299,6 +305,10 @@ function App() {
       setConfirmStatus('success')
       const pnl = (confirmModal.price - holding.avgPrice) * confirmModal.quantity
       showNotification(`✅ Sell trade confirmed: ${confirmModal.share} @ ₹${confirmModal.price} | P/L: ₹${pnl.toFixed(2)}`)
+      setTimeout(() => {
+        setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })
+        setConfirmStatus('idle')
+      }, 1200)
     } catch (err) {
       setError(err.message)
       setConfirmStatus('error')
