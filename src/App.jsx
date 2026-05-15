@@ -243,14 +243,11 @@ function App() {
       })
       setBuyForm({ ...emptyBuyForm, date: new Date().toISOString().slice(0, 10) })
       setError('')
-      // Close modal after a brief delay for better UX
-      setTimeout(() => {
-        setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })
-        setIsProcessing(false)
-      }, 500)
+      setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })
       showNotification(`✅ Buy trade confirmed: ${confirmModal.share} @ ₹${confirmModal.price} × ${confirmModal.quantity}`)
     } catch (err) {
       setError(err.message)
+    } finally {
       setIsProcessing(false)
     }
   }
@@ -295,15 +292,12 @@ function App() {
       })
       setSellForm({ ...emptySellForm, date: new Date().toISOString().slice(0, 10) })
       setError('')
-      // Close modal after a brief delay for better UX
-      setTimeout(() => {
-        setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })
-        setIsProcessing(false)
-      }, 500)
+      setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })
       const pnl = (confirmModal.price - holding.avgPrice) * confirmModal.quantity
       showNotification(`✅ Sell trade confirmed: ${confirmModal.share} @ ₹${confirmModal.price} | P/L: ₹${pnl.toFixed(2)}`)
     } catch (err) {
       setError(err.message)
+    } finally {
       setIsProcessing(false)
     }
   }
@@ -588,9 +582,9 @@ function App() {
               <p className="modal-total"><strong>Total Amount:</strong> ₹{(confirmModal.price * confirmModal.quantity).toFixed(2)}</p>
             </div>
             <div className="modal-buttons">
-              <button className="btn-cancel" onClick={() => setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })}>Cancel</button>
-              <button className="btn-confirm" onClick={confirmModal.type === 'buy' ? confirmBuyTransaction : confirmSellTransaction} disabled={isProcessing}>
-                {isProcessing ? 'Processing...' : `Confirm ${confirmModal.type === 'buy' ? 'Purchase' : 'Sale'}`}
+              <button type="button" className="btn-cancel" onClick={() => setConfirmModal({ show: false, type: '', share: '', price: 0, quantity: 0 })}>Cancel</button>
+              <button type="button" className="btn-confirm" onClick={confirmModal.type === 'buy' ? confirmBuyTransaction : confirmSellTransaction} disabled={isProcessing}>
+                {isProcessing ? 'Processing...' : `Submit Trade`}
               </button>
             </div>
           </div>
